@@ -1,0 +1,21 @@
+1. ALGORITHM DOCUMENTATION
+    Strategy: Data Parallelism via Domain Decomposition.
+    Decomposition: The total number of particles (N) is divided into P subsets, where P is the number of processes => 1D Domain Decomposition.
+    We use The Ring Algorithm to avoid memory overhead of storing all particles on each node. In each subset, particle data is passed to the next process(neighbour) in a ring-like fashion. This allows for a O(N^2) force calculation with O(N) memory usage per process.
+    We also use Forward Euler Integration to update particle positions and velocities, with a Softening Factor to handle close encounters between particles.
+
+2. SYNCRONIZATION EXPLANATION
+    Strategy: Bulk Synchronous Parallel (BSP) and Deadlock Avoidance.
+    Communication: MPI_ISend and MPI_IRecv are used for non-blocking point-to-point communication between processes. Each process sends its local particle data to its right neighbour and receives data from its left neighbour in a ring topology.
+    Deadlock prevention: By using non-blocking communication, the code ensures that all ranks can initiate a transfer simultaneously without waiting for a buffer that hasn't been cleared yet.
+    Synchronization points:
+        - Implicit: The MPI_Wait calls act as synchronization points, ensuring that all data transfers are complete before proceeding to the next computation phase.
+        - Explicit: The MPI_Allgather is used at start up to syncronize particle counts across all processes and MPI_Reduce is used at the end to agree on global performance metrics.
+    Consensus: Rank 0 is used as Master/Coordinator for I/O operations and console logging to prevent race conditions on standard output stream.
+
+3. PERFORMANCE ANALYSYS PRESENTATION
+    Particles | Processes | Max runtime (s) | Computation time (s) | Communication time (s) |     Efficiency (%)
+    ---------------------------------------------------------------------------------------------------------------
+        10000   |     2     |    6.62412      |       13.1869       |        0.023422       |       99.699
+        10000   |     4     |    3.57192      |       13.9782       |        0.2605         |       98.4016
+        20000   |     4     |    13.9591      |       55.3172       |        0.447188       |       99.2528

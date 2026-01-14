@@ -1,0 +1,13 @@
+# Compiled executables
+nbody_mpi
+
+# Checkpoint files
+checkpoint_*.bin
+
+# Other common patterns
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+.DS_Store
